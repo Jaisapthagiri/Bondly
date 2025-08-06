@@ -1,5 +1,7 @@
 import { Inngest } from "inngest";
 import User from '../models/User.js'
+import Connection from "../models/Connection.js";
+import sendMail from "../configs/nodeMailer.js";
 
 export const inngest = new Inngest({ id: "Bondly" });
 
@@ -24,7 +26,6 @@ const syncUserCreation = inngest.createFunction(
             username
         }
         await User.create(userData)
-
     }
 )
 
@@ -39,8 +40,7 @@ const syncUserUpdation = inngest.createFunction(
             full_name: first_name + " " + last_name,
             profile_picture: image_url,
         }
-        await User.findByIdAndUpdate(id , updatedUserData)
-
+        await User.findByIdAndUpdate(id, updatedUserData)
     }
 )
 
@@ -49,15 +49,119 @@ const syncUserDeletion = inngest.createFunction(
     { event: 'clerk/user.deleted' },
     async ({ event }) => {
         const { id } = event.data
-
-        
-        await User.findByIdAndDelete(id )
-
+        await User.findByIdAndDelete(id)
     }
 )
+
+// const sendNewConnectionRequestReminder = inngest.createFunction(
+//     { id: "send-new-connection-request-reminder" },
+//     { event: "app/connection-request" },
+//     async ({ event, step }) => {
+//         const { connectionId } = event.data
+
+//         await step.run("send-connection-request-email", async () => {
+//             const connection = await Connection.findById(connectionId).populate('from_user_id to_user_id')
+//             const subject = `👋 New Connection Request`;
+//             const body = `<div style="font-family: Arial, sans-serif; padding: 20px;">
+//                 <h2>Hi ${connection.to_user_id.full_name},</h2>
+//                 <p>You have a new connection request from ${connection.from_user_id.full_name} - @${connection.from_user_id.username}</p>
+//                 <p>Click <a href="${process.env.FRONTEND_URL}/connections" style="color: #10b981;">here</a> to accept or reject the request</p>
+//                 <br/>
+//                 <p>Thanks,<br/>Bondly - Stay Connected</p>
+//                 </div>`;
+
+//             await sendMail({
+//                 to: connection.to_user_id.email,
+//                 subject,
+//                 body
+//             })
+//         })
+
+//         const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000)
+//         await step.sleepUntil("wait-for-24-hours", in24Hours)
+//         await step.run("send-new-connection-request-reminder", async () => {
+//             const connection = await Connection.findById(connectionId).populate('from_user_id to_user_id')
+
+//             if (connection.status === 'accepted') {
+//                 return { message: "Already accepted" }
+//             }
+//             const subject = `👋 New Connection Request`;
+//             const body = `<div style="font-family: Arial, sans-serif; padding: 20px;">
+//                 <h2>Hi ${connection.to_user_id.full_name},</h2>
+//                 <p>You have a new connection request from ${connection.from_user_id.full_name} - @${connection.from_user_id.username}</p>
+//                 <p>Click <a href="${process.env.FRONTEND_URL}/connections" style="color: #10b981;">here</a> to accept or reject the request</p>
+//                 <br/>
+//                 <p>Thanks,<br/>Bondly - Stay Connected</p>
+//                 </div>`;
+
+//             await sendMail({
+//                 to: connection.to_user_id.email,
+//                 subject,
+//                 body
+//             })
+//             return {message:"remainder sent"}
+//         })
+//     }
+// )
+
+const sendNewConnectionRequestReminder = inngest.createFunction(
+    { id: "send-new-connection-request-reminder" },
+    { event: "app/connection-request" },
+    async ({ event, step }) => {
+        const { connectionId } = event.data;
+
+        await step.run("send-connection-request-email", async () => {
+            const connection = await Connection.findById(connectionId).populate('from_user_id to_user_id');
+            const subject = `👋 New Connection Request`;
+            const body = `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Hi ${connection.to_user_id.full_name},</h2>
+                <p>You have a new connection request from ${connection.from_user_id.full_name} - @${connection.from_user_id.username}</p>
+                <p>Click <a href="${process.env.FRONTEND_URL}/connections" style="color: #10b981;">here</a> to accept or reject the request</p>
+                <br/>
+                <p>Thanks,<br/>Bondly - Stay Connected</p>
+                </div>`;
+
+            await sendMail({
+                to: connection.to_user_id.email,
+                subject,
+                body
+            });
+        });
+
+        const in24Hours = new Date(Date.now() + 24 * 60 * 60 * 1000);
+        await step.sleepUntil("wait-for-24-hours", in24Hours);
+        await step.run("send-new-connection-request-reminder", async () => {
+            const connection = await Connection.findById(connectionId).populate('from_user_id to_user_id');
+            if (!connection) return { message: "Connection not found" };
+
+            if (connection.status === 'accepted') {
+                return { message: "Already accepted" };
+            }
+
+            const subject = `👋 New Connection Request`;
+            const body = `<div style="font-family: Arial, sans-serif; padding: 20px;">
+                <h2>Hi ${connection.to_user_id.full_name},</h2>
+                <p>You have a new connection request from ${connection.from_user_id.full_name} - @${connection.from_user_id.username}</p>
+                <p>Click <a href="${process.env.FRONTEND_URL}/connections" style="color: #10b981;">here</a> to accept or reject the request</p>
+                <br/>
+                <p>Thanks,<br/>Bondly - Stay Connected</p>
+                </div>`;
+
+            await sendMail({
+                to: connection.to_user_id.email,
+                subject,
+                body
+            });
+
+            return { message: "reminder sent" };
+        });
+    }
+);
+
 
 export const functions = [
     syncUserCreation,
     syncUserUpdation,
-    syncUserDeletion
+    syncUserDeletion,
+    sendNewConnectionRequestReminder
 ];

@@ -15,76 +15,6 @@ export const getUserData = async (req, res, next) => {
     }
 };
 
-// export const updateUserData = async (req, res, next) => {
-//     try {
-//         const { userId } = req.auth();
-//         let { username, bio, location, full_name } = req.body;
-
-//         const tempUser = await User.findById(userId);
-//         !username && (username = tempUser.username);
-
-//         if (tempUser.username !== username) {
-//             const user = await User.findOne({ username });
-//             if (user) {
-//                 username = tempUser.username;
-//             }
-//         }
-
-//         const updatedUser = {
-//             username,
-//             bio,
-//             location,
-//             full_name
-//         };
-
-//         const profile = req.files?.profile?.[0];
-//         const cover = req.files?.cover?.[0];
-
-//         if (profile) {
-//             const buffer = fs.readFileSync(profile.path);
-//             const response = await imagekit.upload({
-//                 file: buffer,
-//                 fileName: profile.originalname,
-//             });
-
-//             const url = imagekit.url({
-//                 path: response.filePath,
-//                 transformation: [
-//                     { quality: 'auto' },
-//                     { format: 'webp' },
-//                     { width: '512' },
-//                 ]
-//             });
-//             updatedUser.profile_picture = url;
-//         }
-
-//         if (cover) {
-//             const buffer = fs.readFileSync(cover.path);
-//             const response = await imagekit.upload({
-//                 file: buffer,
-//                 fileName: cover.originalname,
-//             });
-
-//             const url = imagekit.url({
-//                 path: response.filePath,
-//                 transformation: [
-//                     { quality: 'auto' },
-//                     { format: 'webp' },
-//                     { width: '1280' },
-//                 ]
-//             });
-//             updatedUser.cover_photo = url;
-//         }
-
-//         const user = await User.findByIdAndUpdate(userId, updatedUser, { new: true });
-
-//         res.json({ success: true, user, message: 'Profile Updated successfully' });
-//     } catch (error) {
-//         res.json({ success: false, message: error.message });
-//     }
-// };
-// make sure you import this correctly
-
 export const updateUserData = async (req, res, next) => {
     try {
         const { userId } = req.auth();
@@ -96,7 +26,7 @@ export const updateUserData = async (req, res, next) => {
         if (tempUser.username !== username) {
             const user = await User.findOne({ username });
             if (user) {
-                username = tempUser.username; // fallback to old one if already taken
+                username = tempUser.username; 
             }
         }
 
@@ -115,10 +45,10 @@ export const updateUserData = async (req, res, next) => {
             const response = await imagekit.upload({
                 file: buffer,
                 fileName: profile.originalname,
-                folder: "profiles", // optional
+                folder: "profiles", 
             });
 
-            updatedUser.profile_picture = response.url; // ✅ Use URL from response
+            updatedUser.profile_picture = response.url; 
         }
 
         if (cover) {
@@ -126,10 +56,10 @@ export const updateUserData = async (req, res, next) => {
             const response = await imagekit.upload({
                 file: buffer,
                 fileName: cover.originalname,
-                folder: "covers", // optional
+                folder: "covers", 
             });
 
-            updatedUser.cover_photo = response.url; // ✅ Use URL from response
+            updatedUser.cover_photo = response.url; 
         }
 
         const user = await User.findByIdAndUpdate(userId, updatedUser, { new: true });
@@ -148,7 +78,7 @@ export const discoverUser = async (req, res, next) => {
 
         const allUser = await User.find({
             $or: [
-                { username: new RegExp(input, 'i') },  // 🔧 'i' must be in quotes
+                { username: new RegExp(input, 'i') }, 
                 { email: new RegExp(input, 'i') },
                 { full_name: new RegExp(input, 'i') },
                 { location: new RegExp(input, 'i') },
