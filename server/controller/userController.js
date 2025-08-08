@@ -2,6 +2,19 @@ import imagekit from "../configs/imageKit.js";
 import User from "../models/User.js";
 import fs from 'fs';
 
+// export const getUserData = async (req, res, next) => {
+//     try {
+//         const { userId } = req.auth();
+//         const user = await User.findById(userId);
+//         if (!user) {
+//             return res.json({ success: false, message: "user not found" });
+//         }
+//         res.json({ success: true, user });
+//     } catch (error) {
+//         res.json({ success: false, message: error.message });
+//     }
+// };
+
 export const getUserData = async (req, res, next) => {
     try {
         const { userId } = req.auth();
@@ -15,6 +28,7 @@ export const getUserData = async (req, res, next) => {
     }
 };
 
+
 export const updateUserData = async (req, res, next) => {
     try {
         const { userId } = req.auth();
@@ -26,7 +40,7 @@ export const updateUserData = async (req, res, next) => {
         if (tempUser.username !== username) {
             const user = await User.findOne({ username });
             if (user) {
-                username = tempUser.username; 
+                username = tempUser.username;
             }
         }
 
@@ -37,18 +51,26 @@ export const updateUserData = async (req, res, next) => {
             full_name
         };
 
-        const profile = req.files?.profile?.[0];
-        const cover = req.files?.cover?.[0];
+        const profile = req.files.profile && req.files.profile[0];
+        const cover = req.files.cover && req.files.cover[0];
 
         if (profile) {
             const buffer = fs.readFileSync(profile.path);
             const response = await imagekit.upload({
                 file: buffer,
                 fileName: profile.originalname,
-                folder: "profiles", 
             });
 
-            updatedUser.profile_picture = response.url; 
+            const url = imagekit.url({
+                path: response.filePath,
+                transformation: [
+                    { quality: 'auto' },
+                    { format: 'webp' },
+                    { width: '512' }
+                ]
+            })
+
+            updatedUser.profile_picture = url;
         }
 
         if (cover) {
@@ -56,10 +78,18 @@ export const updateUserData = async (req, res, next) => {
             const response = await imagekit.upload({
                 file: buffer,
                 fileName: cover.originalname,
-                folder: "covers", 
             });
 
-            updatedUser.cover_photo = response.url; 
+            const url = imagekit.url({
+                path: response.filePath,
+                transformation: [
+                    { quality: 'auto' },
+                    { format: 'webp' },
+                    { width: '1280' }
+                ]
+            })
+
+            updatedUser.cover_photo = url;
         }
 
         const user = await User.findByIdAndUpdate(userId, updatedUser, { new: true });
@@ -78,7 +108,7 @@ export const discoverUser = async (req, res, next) => {
 
         const allUser = await User.find({
             $or: [
-                { username: new RegExp(input, 'i') }, 
+                { username: new RegExp(input, 'i') },
                 { email: new RegExp(input, 'i') },
                 { full_name: new RegExp(input, 'i') },
                 { location: new RegExp(input, 'i') },
@@ -130,11 +160,11 @@ export const unFollowUser = async (req, res, next) => {
         const { id } = req.body;
 
         const user = await User.findById(userId);
-        user.following = user.following.filter(user => userId !== id)
-        await user.save()
+        user.following = user.following.filter(followingId => followingId.toString() !== id);
+        await user.save();
 
         const toUser = await User.findById(id);
-        toUser.followers = toUser.followers.filter(user => userId !== id)
+        toUser.followers = toUser.followers.filter(followerId => followerId.toString() !== userId);
         await toUser.save();
 
         return res.json({ success: true, message: 'You are noLonger following this user' });

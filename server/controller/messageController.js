@@ -118,32 +118,51 @@ export const sendMessage = async (req, res) => {
 }
 
 
+// export const getChatMessages = async (req, res) => {
+//     try {
+//         const { userId } = req.auth()
+//         const { to_user_id } = req.body
+
+//         const messages = await Message.find({
+//             $or: [
+//                 { from_user_id: userId, to_user_id },
+//                 { from_user_id: to_user_id, to_user_id: userId }
+//             ]
+//         }).sort({ created_at: -1 })
+
+//         await Message.updateMany({ from_user_id: to_user_id, to_user_id: userId }, { seen: true })
+
+//         res.json({ success: true, messages })
+//     } catch (error) {
+//         return res.json({ success: true, message: error.message })
+//     }
+// }
+
 export const getChatMessages = async (req, res) => {
     try {
-        const { userId } = req.auth()
-        const { to_user_id } = req.body
+        const { userId } = req.auth();
+        const { to_user_id } = req.body;
 
         const messages = await Message.find({
             $or: [
                 { from_user_id: userId, to_user_id },
                 { from_user_id: to_user_id, to_user_id: userId }
             ]
-        }).sort({ created_at: -1 })
+        });
 
-        await Message.updateMany({ from_user_id: to_user_id, to_user_id: userId }, { seen: true })
-
-        res.json({ success: true, messages })
+        return res.json({ success: true, messages });
     } catch (error) {
-        return res.json({ success: true, message: error.message })
+        return res.status(500).json({ success: false, message: "Server error", error });
     }
-}
+};
+
 
 export const getUserRecentMessages = async (req, res) => {
     try {
         const { userId } = req.auth()
         const messages = await Message.find({ to_user_id: userId }).populate('from_user_id to_user_id').sort({ created_at: -1 })
 
-        res.json({success : true , messages})
+        res.json({ success: true, messages })
 
     } catch (error) {
         return res.json({ success: false, message: error.message })

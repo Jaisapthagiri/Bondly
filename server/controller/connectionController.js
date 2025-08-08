@@ -49,17 +49,17 @@ export const sendConnectionRequest = async (req, res, next) => {
 
 export const getUserConnections = async (req, res, next) => {
     try {
-        const { userId } = req.auth()
-        const user = await User.findById(userId).populate('connections followers following')
+        const { userId } = req.auth();
+        const user = await User.findById(userId).populate('connections followers following');
 
-        const connections = user.connections
-        const followers = user.followers
-        const following = user.following
+        const connections = user.connections;
+        const followers = user.followers;
+        const following = user.following;
 
-        const pendingConnections = (await Connection.find({ to_user_id: userId, status: 'pending' }).populate('from_user_id')).map(connection => pendingConnections)
+        const pendingConnectionsDocs = await Connection.find({ to_user_id: userId, status: 'pending' }).populate('from_user_id');
+        const pendingConnections = pendingConnectionsDocs.map(conn => conn.from_user_id);
 
-        res.json({ success: true, connections, followers, following, pendingConnections })
-
+        res.json({ success: true, connections, followers, following, pendingConnections });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }
@@ -96,7 +96,7 @@ export const acceptConnections = async (req, res, next) => {
 
 export const getUserProfiles = async (req, res) => {
     try {
-        const { profileId } = req.auth()
+        const { profileId } = req.body
         const profile = await User.findById(profileId)
 
         if (!profile) {

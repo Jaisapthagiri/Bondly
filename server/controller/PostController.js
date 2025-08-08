@@ -67,7 +67,7 @@ export const getFeedPost = async (req , res ) => {
 
 export const likePost = async (req , res ) => {
     try {
-        const {userId} = res.auth()
+        const {userId} = req.auth()
         const {postId} = req.body
 
         const post = await Post.findById(postId)

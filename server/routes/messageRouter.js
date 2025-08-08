@@ -9,6 +9,4 @@ messageRouter.get('/:userId',sseController)
 messageRouter.post('/send',upload.single('image'),protect,sendMessage)
 messageRouter.post('/get',protect , getChatMessages)
 
-
-
 export default messageRouter;

@@ -2,17 +2,50 @@ import React, { useState } from 'react'
 import { dummyUserData } from '../assets/assets'
 import { Image, X } from 'lucide-react'
 import toast from 'react-hot-toast'
+import { useSelector } from 'react-redux'
+import { useAuth } from '@clerk/clerk-react'
+import { useNavigate } from 'react-router-dom'
+import api from '../api/axios.js'
 
 const CreatePost = () => {
 
+  const navigate = useNavigate()
+
   const [content, setContent] = useState('')
   const [images, setImages] = useState([])
-  const [loading, seLoadingt] = useState(false)
+  const [loading, setLoading] = useState(false)
 
-  const user = dummyUserData
+  const user = useSelector((state) => state.user.value)
 
-  const handleSubmit = async () =>{
+  const { getToken } = useAuth()
 
+  const handleSubmit = async () => {
+    if (!images.length && !content) {
+      return toast.error('Please add atleast one image')
+    }
+    setLoading(true)
+    const postType = images.length && content ? 'text_with_image' : images.length ? 'image' : 'text'
+
+    try {
+      const formData = new FormData()
+      formData.append('content', content)
+      formData.append('post_type', postType)
+      images.map((image) => {
+        formData.append('images', image)
+      })
+      const { data } = await api.post('/api/post/add', formData,
+        { headers: { Authorization: `Bearer ${await getToken()}` } }
+      )
+      if (data.success) {
+        navigate('/')
+      } else {
+        console.log(data.message);
+        throw new Error(error.message)
+      }
+    } catch (error) {
+      console.log(error.message);
+      throw new Error(error.message)
+    }
   }
 
   return (
@@ -60,11 +93,11 @@ const CreatePost = () => {
 
             <input type="file" id="images" accept="image/*" hidden multiple onChange={(e) => setImages([...images, ...e.target.files])} />
 
-            <button disabled={loading} onClick={() => toast.promise(handleSubmit() ,{
-              loading : 'uploading...',
-              success : <p>post added</p>,
-              error : <p>Post not added </p>
-            } 
+            <button disabled={loading} onClick={() => toast.promise(handleSubmit(), {
+              loading: 'uploading...',
+              success: <p>post added</p>,
+              error: <p>Post not added </p>
+            }
             )} className='text-sm bg-gradient-to-r from-indigo-500 to-purple-500 hover:from-indigo-600 hover:to-purple-700
             active:scale-95 transition text-white font-medium px-8 py-2 rounded-md cursor-pointer '>Publish Post</button>
           </div>

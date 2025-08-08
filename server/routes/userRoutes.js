@@ -16,6 +16,7 @@ userRouter.post('/unfollow',protect,unFollowUser)
 userRouter.post('/connect',protect, sendConnectionRequest)
 userRouter.post('/accept',protect ,acceptConnections)
 userRouter.post('/connections',protect, getUserConnections)
+userRouter.get('/connections',protect, getUserConnections)
 userRouter.post('/profiles',protect,getUserProfiles)
 userRouter.get('/recent-messages', protect,getUserRecentMessages)
 
