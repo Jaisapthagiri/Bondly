@@ -52,7 +52,16 @@ function App() {
       eventSource.onmessage = (event) => {
         const message = JSON.parse(event.data);
 
-        if (pathNameRef.current === ('/message/' + message.from_user_id._id)) {
+        const currentPath = pathNameRef.current;
+        const chatMatch = currentPath.match(/\/messages\/(.+)$/);
+        const currentChatUserId = chatMatch ? chatMatch[1] : null;
+        const fromId = message.from_user_id._id || message.from_user_id;
+        const toId = message.to_user_id._id || message.to_user_id;
+
+        if (
+          currentChatUserId &&
+          (fromId === currentChatUserId || toId === currentChatUserId)
+        ) {
           dispatch(addMessages(message));
         } else {
           toast.custom(
