@@ -1,25 +1,47 @@
-import React, { use, useState } from 'react'
+import React, { useState } from 'react'
 import { dummyConnectionsData } from '../assets/assets'
 import { MapPin, Search } from 'lucide-react'
 import UserCard from '../components/UserCard'
 import Loading from '../components/Loading'
+import api from '../api/axios'
+import { useAuth } from '@clerk/clerk-react'
+import toast from 'react-hot-toast'
+import { useDispatch } from 'react-redux'
+import { useEffect } from 'react'
+import { fetchUser } from '../features/user/userSlice'
 
 const Discover = () => {
 
+  const dispatch = useDispatch()
   const [input, setInput] = useState('')
-  const [users, setUsers] = useState(dummyConnectionsData)
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(false)
+  const { getToken } = useAuth()
 
   const handleSearch = async (e) => {
     if (e.key === 'Enter') {
-      setUsers([]),
+      try {
+        setUsers([])
         setLoading(true)
-      setTimeout(() => {
-        setUsers(dummyConnectionsData)
+        const { data } = await api.post('/api/user/discover', { input }, {
+          headers: { Authorization: `Bearer ${await getToken()}` }
+        })
+        data.success ? setUsers(data.users) : toast.error(data.message)
         setLoading(false)
-      }, 1000)
+        setInput('')
+      } catch (error) {
+        toast.error(error.message)
+      }
+      setLoading(false)
     }
   }
+
+  useEffect(() => {
+    getToken().then((token) => {
+      dispatch(fetchUser(token));
+    });
+  }, [dispatch, getToken]);
+
 
   return (
     <div className='min-h-screen bg-gradient-to-b from-slate-50 to-white'>
@@ -44,7 +66,7 @@ const Discover = () => {
 
         <div className='flex flex-wrap gap-6'>
           {
-            users.map((user) => (
+            (Array.isArray(users) ? users : []).map((user) => (
               <UserCard user={user} key={user._id} />
             ))
           }
@@ -55,7 +77,7 @@ const Discover = () => {
             loading && (<Loading height='60vh' />)
           }
         </div>
-        
+
       </div>
     </div>
 

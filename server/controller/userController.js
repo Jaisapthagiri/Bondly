@@ -115,8 +115,8 @@ export const discoverUser = async (req, res, next) => {
             ]
         });
 
-        const filteredUser = allUser.filter(user => user.id !== userId);
-        res.json({ success: true, user: filteredUser });
+    const filteredUser = allUser.filter(user => user.id !== userId);
+    res.json({ success: true, users: filteredUser });
     } catch (error) {
         res.json({ success: false, message: error.message });
     }

@@ -70,24 +70,28 @@ export const acceptConnections = async (req, res, next) => {
         const { userId } = req.auth()
         const { id } = req.body
 
-        const connection = await Connection.findById({ from_user_id: id, to_user_id: userId })
 
-        if (!connection) {
-            return res.json({ success: false, message: "connection not found" })
-        }
+    const connection = await Connection.findOne({ from_user_id: id, to_user_id: userId })
+    if (!connection) {
+        return res.json({ success: false, message: "connection not found" })
+    }
 
-        const user = await User.findById(userId)
-        user.connections.push(id)
-        await user.save()
+    const user = await User.findById(userId);
+    if (!user.connections.includes(id)) {
+        user.connections.push(id);
+        await user.save();
+    }
 
-        const toUser = await User.findById(id)
-        toUser.connections.push(userId)
-        await user.save()
+    const toUser = await User.findById(id);
+    if (!toUser.connections.includes(userId)) {
+        toUser.connections.push(userId);
+        await toUser.save();
+    }
 
-        connection.status = 'accepted'
-        await connection.save()
+    connection.status = 'accepted';
+    await connection.save();
 
-        return res.json({ success: true, message: "connection accepted successfully" })
+    return res.json({ success: true, message: "connection accepted successfully" });
 
     } catch (error) {
         res.json({ success: false, message: error.message });

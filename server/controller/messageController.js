@@ -13,7 +13,10 @@ export const sseController = (req, res) => {
     res.setHeader('Content-Type', 'text/event-stream');
     res.setHeader('Cache-Control', 'no-cache');
     res.setHeader('Connection', 'keep-alive');
-    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Origin', req.headers.origin || '*');
+    res.setHeader('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.setHeader('Vary', 'Origin');
 
     connections[userId] = res;
 
@@ -108,8 +111,13 @@ export const sendMessage = async (req, res) => {
 
         const messageWithUserData = await Message.findById(message._id).populate('from_user_id');
 
+        // Broadcast to receiver
         if (connections[to_user_id]) {
             connections[to_user_id].write(`data: ${JSON.stringify(messageWithUserData)}\n\n`);
+        }
+        // Broadcast to sender (so sender also gets instant update)
+        if (connections[userId]) {
+            connections[userId].write(`data: ${JSON.stringify(messageWithUserData)}\n\n`);
         }
 
     } catch (error) {
@@ -117,31 +125,11 @@ export const sendMessage = async (req, res) => {
     }
 }
 
-
-// export const getChatMessages = async (req, res) => {
-//     try {
-//         const { userId } = req.auth()
-//         const { to_user_id } = req.body
-
-//         const messages = await Message.find({
-//             $or: [
-//                 { from_user_id: userId, to_user_id },
-//                 { from_user_id: to_user_id, to_user_id: userId }
-//             ]
-//         }).sort({ created_at: -1 })
-
-//         await Message.updateMany({ from_user_id: to_user_id, to_user_id: userId }, { seen: true })
-
-//         res.json({ success: true, messages })
-//     } catch (error) {
-//         return res.json({ success: true, message: error.message })
-//     }
-// }
-
 export const getChatMessages = async (req, res) => {
     try {
         const { userId } = req.auth();
         const { to_user_id } = req.body;
+        console.log('Fetching chat messages between:', { userId, to_user_id });
 
         const messages = await Message.find({
             $or: [
