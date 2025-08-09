@@ -27,9 +27,9 @@ const RecentMessage = () => {
                     return acc;
                 }, {});
 
-                const sortedMessage = Object.values(groupedMessages).sort((a,b)=>new Date(b.createdAt)-new Date(a.createdAt))
+                const sortedMessage = Object.values(groupedMessages).sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt))
                 setMessages(sortedMessage)
-            }else{
+            } else {
                 toast.error(data.message)
             }
         } catch (error) {
@@ -38,10 +38,10 @@ const RecentMessage = () => {
     }
 
     useEffect(() => {
-        if(user){
+        if (user) {
             fetchRecentMessages()
-            setInterval(fetchRecentMessages,3000)
-            return ()=>{clearInterval}
+            const intervalId = setInterval(fetchRecentMessages, 3000)
+            return () => clearInterval(intervalId)
         }
     }, [user])
 
