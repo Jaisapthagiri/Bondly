@@ -37,13 +37,13 @@ const RecentMessage = () => {
         }
     }
 
-    useEffect(() => {
-        if (user) {
-            fetchRecentMessages()
-            const intervalId = setInterval(fetchRecentMessages, 3000)
-            return () => clearInterval(intervalId)
-        }
-    }, [user])
+    // useEffect(() => {
+    //     if (user) {
+    //         fetchRecentMessages()
+    //         const intervalId = setInterval(fetchRecentMessages, 3000)
+    //         return () => clearInterval(intervalId)
+    //     }
+    // }, [user])
 
     return (
         <div className='bg-white max-w-xs mt-4 p-4 min-h-20 rounded-md shadow text-xs text-slate-800'>
