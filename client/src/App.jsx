@@ -21,7 +21,7 @@ import Notification from './components/Notification';
 function App() {
   const { user } = useUser();
   const { getToken } = useAuth()
-  const {pathname} = useLocation()
+  const { pathname } = useLocation()
   const pathNameRef = useRef(pathname)
 
   const dispatch = useDispatch();
@@ -42,34 +42,32 @@ function App() {
   }, [pathname])
 
   useEffect(() => {
-    if (!user || !user.id) return;
+    pathNameRef.current = pathname
+  }, [pathname])
 
-    // Use the correct env variable name for base URL
-    const eventSource = new EventSource(`${import.meta.env.VITE_BASE_URL}/api/message/${user.id}`);
+  useEffect(() => {
+    if (user) {
+      const eventSource = new EventSource(import.meta.env.VITE_BASE_URL + '/api/message/' + user.id);
 
-    eventSource.onmessage = (event) => {
-      const message = JSON.parse(event.data);
-      // Get the current chat userId from the URL
-      const currentPath = pathNameRef.current;
-      const chatMatch = currentPath.match(/\/messages\/(.+)$/);
-      const currentChatUserId = chatMatch ? chatMatch[1] : null;
-      // Only add the message if it belongs to the current chat
-      if (
-        currentChatUserId &&
-        (message.from_user_id === currentChatUserId || message.to_user_id === currentChatUserId)
-      ) {
-        dispatch(addMessages(message));
-      }else{
-        toast.custom((t) => {
-          <Notification t={t} message={message} />
-        },{position:"bottom-right"})
-      }
-    };
+      eventSource.onmessage = (event) => {
+        const message = JSON.parse(event.data);
 
-    return () => {
-      eventSource.close();
-    };
+        if (pathNameRef.current === ('/message/' + message.from_user_id._id)) {
+          dispatch(addMessages(message));
+        } else {
+          toast.custom(
+            (t) => <Notification t={t} message={message} />,
+            { position: 'bottom-right' }
+          );
+        }
+      };
+
+      return () => {
+        eventSource.close();
+      };
+    }
   }, [user, dispatch]);
+
 
 
   return (
