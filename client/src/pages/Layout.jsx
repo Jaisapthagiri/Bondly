@@ -1,14 +1,12 @@
-import React, { useState } from 'react'
+import { useState } from 'react'
 import SideBar from '../components/SideBar'
 import { Outlet } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
-import { dummyUserData } from '../assets/assets'
 import Loading from '../components/Loading'
 import { useSelector } from 'react-redux'
 
 const Layout = () => {
   const user = useSelector((state)=>state.user.value)
-  // const [sidebarOpen, setSidebarOpen] = useState()      changed coz of chatgpt
   const [sidebarOpen, setSidebarOpen] = useState()
 
   return user ? (

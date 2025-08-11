@@ -97,7 +97,6 @@ const ChatBox = () => {
                   className={`flex flex-col ${message.to_user_id !== user._id ? 'items-start' : 'items-end'
                     }`}
                 >
-                  {/* Render message content here */}
                   <div className={`p-2 text-sm max-w-sm bg-white text-slate-700 rounded-lg shadow ${message.to_user_id !== user._id ? 'rounded-bl-none' : 'rounded-br-none'}`}>
                     {
                       message.message_type === "image" && <img src={message.media_url} className='w-full max-w-sm rounded-lg mb-1' alt="" />
