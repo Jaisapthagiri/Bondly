@@ -159,3 +159,17 @@ export const unFollowUser = async (req, res, next) => {
         res.json({ success: false, message: error.message });
     }
 };
+//newly added
+export const getAllUsers = async (req, res, next) => {
+    try {
+        const { userId } = req.auth();
+
+        const users = await User.find({ _id: { $ne: userId } })
+            .select("-password") 
+            .lean();
+
+        res.json({ success: true, users });
+    } catch (error) {
+        res.json({ success: false, message: error.message });
+    }
+};
