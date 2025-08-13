@@ -19,7 +19,7 @@ userRouter.post('/connections',protect, getUserConnections)
 userRouter.get('/connections',protect, getUserConnections)
 userRouter.post('/profiles',protect,getUserProfiles)
 userRouter.get('/recent-messages', protect,getUserRecentMessages)
-userRouter.get('/user/discover-all', protect, getAllUsers); // newly added
+userRouter.get('/discover-all', protect, getAllUsers); // newly added
 
 
 export default userRouter;
